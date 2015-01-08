@@ -15,6 +15,8 @@ extern "C" {
 JNIEXPORT void JNICALL Java_app_jni_androidffmpeg_ffmpeg_ffmpeg
   (JNIEnv *, jobject, jstring);
 
+void av_dump(const char* media_path);
+
 #ifdef __cplusplus
 }
 #endif
