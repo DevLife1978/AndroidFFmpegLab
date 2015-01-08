@@ -9,13 +9,27 @@ extern "C" {
 #endif
 /*
  * Class:     app_jni_androidffmpeg_ffmpeg
+ * Method:    initialize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_app_jni_androidffmpeg_ffmpeg_initialize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     app_jni_androidffmpeg_ffmpeg
  * Method:    ffmpeg
  * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_app_jni_androidffmpeg_ffmpeg_ffmpeg
   (JNIEnv *, jobject, jstring);
 
-void av_dump(const char* media_path);
+/*
+ * Class:     app_jni_androidffmpeg_ffmpeg
+ * Method:    media_length
+ * Signature: (Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_app_jni_androidffmpeg_ffmpeg_media_1length
+  (JNIEnv *, jobject, jstring);
 
 #ifdef __cplusplus
 }

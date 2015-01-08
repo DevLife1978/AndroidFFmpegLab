@@ -23,4 +23,12 @@
         android:contentDescription="@null"
         android:visibility="visible" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/duration"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:shadowColor="#000000" />
 </RelativeLayout>

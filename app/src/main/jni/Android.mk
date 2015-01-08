@@ -40,6 +40,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := ffmpeg
 LOCAL_SRC_FILES := ffmpeg.c
+LOCAL_CFLAGS += -std=c99
 LOCAL_LDLIBS := -llog -lz
 LOCAL_SHARED_LIBRARIES := libavformat libavcodec libswscale libavutil
 

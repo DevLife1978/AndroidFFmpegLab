@@ -38,7 +38,7 @@ public class MainActivity extends ActionBarActivity {
         if (null != data && requestCode == 101 && resultCode == Activity.RESULT_OK)
         {
             ffmpeg ffmpeg = new ffmpeg();
-            ffmpeg.ffmpeg(data.getStringExtra("path"));
+            ffmpeg.dump2log(data.getStringExtra("path"));
         }
     }
 
