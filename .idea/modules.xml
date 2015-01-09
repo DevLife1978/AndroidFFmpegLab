@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/AndroidFFmpeg.iml" filepath="$PROJECT_DIR$/AndroidFFmpeg.iml" />
       <module fileurl="file:///Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/app/app.iml" filepath="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/app/app.iml" />
+      <module fileurl="file:///Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/ffmpegandroid/ffmpegandroid.iml" filepath="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/ffmpegandroid/ffmpegandroid.iml" />
     </modules>
   </component>
 </project>

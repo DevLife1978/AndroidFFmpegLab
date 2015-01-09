@@ -9,6 +9,7 @@
           <set>
             <option value="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg" />
             <option value="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/app" />
+            <option value="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/ffmpegandroid" />
           </set>
         </option>
       </GradleProjectSettings>

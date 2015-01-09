@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="app.jni.ffmpegandroid" >
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name" >
+        <activity
+            android:name="app.jni.androidffmpeg.FFmpegActivity"
+            android:label="@string/title_activity_ffmpeg" >
+        </activity>
+    </application>
+
+</manifest>

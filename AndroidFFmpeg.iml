@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.path="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="java-gradle" name="Java-Gradle">
+      <configuration>
+        <option name="BUILD_FOLDER_PATH" value="/Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/build" />
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file:///Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/build/classes/main" />
+    <output-test url="file:///Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/build/classes/test" />
+    <exclude-output />
+    <content url="file:///Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg">
+      <excludeFolder url="file:///Volumes/Data/jayjay/Dev/projects/AndroidFFmpeg/.gradle" />
+    </content>
+    <orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
+

@@ -1,6 +1,5 @@
 package app.jni.androidffmpeg;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -26,6 +25,10 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.PauseOnScrollListener;
+
+import java.io.File;
+
+import app.jni.ffmpegandroid.ffmpeg;
 
 /**
  * Created by jayjay on 14. 12. 15..
@@ -71,10 +74,13 @@ public class VideoActivity extends BaseActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 CustomAdapter.ViewHolder vh = (CustomAdapter.ViewHolder) view.getTag();
                 ffmpeg.dump2log(vh.getVideoPath());
-//                Intent result = new Intent();
-//                result.putExtra("path", vh.getVideoPath());
-//                setResult(Activity.RESULT_OK, result);
-//                finish();
+
+                File file = new File("/storage/emulated/0/DCIM/Camera/output.mp4");
+                if (file.exists()){
+                    file.delete();
+                }
+
+                ffmpeg.runScaleMedia(vh.getVideoPath(), "/storage/emulated/0/DCIM/Camera/output.mp4");
             }
         });
         findViewById(R.id.open_video).setOnClickListener(new View.OnClickListener() {
