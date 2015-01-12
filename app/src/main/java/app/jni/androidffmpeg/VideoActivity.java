@@ -2,7 +2,6 @@ package app.jni.androidffmpeg;
 
 import android.content.Context;
 import android.content.CursorLoader;
-import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -28,7 +27,7 @@ import com.nostra13.universalimageloader.core.listener.PauseOnScrollListener;
 
 import java.io.File;
 
-import app.jni.ffmpegandroid.ffmpeg;
+import app.jni.ffmpegandroid.ffmpeglib;
 
 /**
  * Created by jayjay on 14. 12. 15..
@@ -42,7 +41,7 @@ public class VideoActivity extends BaseActivity {
     private ImageLoader mImageLoader;
     private CustomAdapter customCursorAdapter;
 
-    ffmpeg ffmpeg = new ffmpeg();
+    ffmpeglib ffmpeglib = new ffmpeglib();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,14 +72,15 @@ public class VideoActivity extends BaseActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 CustomAdapter.ViewHolder vh = (CustomAdapter.ViewHolder) view.getTag();
-                ffmpeg.dump2log(vh.getVideoPath());
-
-                File file = new File("/storage/emulated/0/DCIM/Camera/output.mp4");
-                if (file.exists()){
-                    file.delete();
-                }
-
-                ffmpeg.runScaleMedia(vh.getVideoPath(), "/storage/emulated/0/DCIM/Camera/output.mp4");
+                ffmpeglib.ffmpeg_test();
+//                ffmpeglib.dump2log(vh.getVideoPath());
+//
+//                File file = new File("/storage/emulated/0/DCIM/Camera/output.mp4");
+//                if (file.exists()){
+//                    file.delete();
+//                }
+//
+//                ffmpeglib.runScaleMedia(vh.getVideoPath(), "/storage/emulated/0/DCIM/Camera/output.mp4");
             }
         });
         findViewById(R.id.open_video).setOnClickListener(new View.OnClickListener() {
@@ -185,7 +185,7 @@ public class VideoActivity extends BaseActivity {
             // 파일 경로
             String path = c.getString(c.getColumnIndex(Media.DATA));
             vh.setVideoPath(path);
-            long duration = ffmpeg.getDuration(path) + 5000;
+            long duration = ffmpeglib.getDuration(path) + 5000;
             int hours, mins, secs, us;
             secs  = (int)(duration / 1000000);
             us    = (int)(duration % 1000000);

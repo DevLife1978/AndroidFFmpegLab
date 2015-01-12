@@ -42,6 +42,7 @@ LOCAL_SRC_FILES := libandroid.so
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
 include $(PREBUILT_SHARED_LIBRARY)
 
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := graphics-prebuilt
 LOCAL_SRC_FILES := libjnigraphics.so
@@ -50,8 +51,8 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := ffmpeg
-LOCAL_SRC_FILES := ffmpeg.c
+LOCAL_MODULE    := ffmpeglib
+LOCAL_SRC_FILES := ffmpeglib.c
 LOCAL_CFLAGS += -std=c99
 LOCAL_LDLIBS := -llog -lz
 LOCAL_SHARED_LIBRARIES := libavformat libavcodec libswscale libavutil android-prebuilt graphics-prebuilt

@@ -8,7 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import app.jni.ffmpegandroid.ffmpeg;
+import app.jni.ffmpegandroid.ffmpeglib;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -38,8 +38,8 @@ public class MainActivity extends ActionBarActivity {
 
         if (null != data && requestCode == 101 && resultCode == Activity.RESULT_OK)
         {
-            ffmpeg ffmpeg = new ffmpeg();
-            ffmpeg.dump2log(data.getStringExtra("path"));
+            ffmpeglib ffmpeglib = new ffmpeglib();
+            ffmpeglib.dump2log(data.getStringExtra("path"));
         }
     }
 

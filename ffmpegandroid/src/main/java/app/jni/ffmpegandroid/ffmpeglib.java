@@ -3,12 +3,12 @@ package app.jni.ffmpegandroid;
 /**
  * Created by jayjay on 15. 1. 8..
  */
-public class ffmpeg {
+public class ffmpeglib {
     static {
-        System.loadLibrary("ffmpeg");
+        System.loadLibrary("ffmpeglib");
     }
     static boolean initialized = false;
-    public ffmpeg() {
+    public ffmpeglib() {
         super();
         if (initialized == false) {
             initialized = true;
@@ -24,11 +24,14 @@ public class ffmpeg {
         return media_length(mediaPath);
     }
     public int runScaleMedia(String src, String dst) {
-        return scale_media(src, dst);
+        return 0;
+    }
+    public int runMuxing(){
+        return 0;
     }
 
     private native void initialize();
     private native void dump(String mediaPath);
     private native long media_length(String mediaPath);
-    private native int scale_media(String source, String destination);
+    public native void ffmpeg_test();
 }
