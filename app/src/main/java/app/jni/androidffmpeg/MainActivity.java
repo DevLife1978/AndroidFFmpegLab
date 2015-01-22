@@ -38,8 +38,8 @@ public class MainActivity extends ActionBarActivity {
 
         if (null != data && requestCode == 101 && resultCode == Activity.RESULT_OK)
         {
-            ffmpeglib ffmpeglib = new ffmpeglib();
-            ffmpeglib.dump2log(data.getStringExtra("path"));
+//            ffmpeglib ffmpeglib = new ffmpeglib();
+//            ffmpeglib.dump2log(data.getStringExtra("path"));
         }
     }
 

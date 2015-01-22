@@ -71,14 +71,22 @@ public class VideoActivity extends BaseActivity {
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                CustomAdapter.ViewHolder vh = (CustomAdapter.ViewHolder) view.getTag();
-                ffmpeglib.ffmpeg_test();
+
+                final String filename = "/sdcard/Movies/output.mp4";
+                File file = new File(filename);
+                if (file.exists()){
+                    file.delete();
+                }
+
+                final CustomAdapter.ViewHolder vh = (CustomAdapter.ViewHolder) view.getTag();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ffmpeglib.ffmpeg_test(vh.getVideoPath(), filename);
+                    }
+                }).start();
 //                ffmpeglib.dump2log(vh.getVideoPath());
 //
-//                File file = new File("/storage/emulated/0/DCIM/Camera/output.mp4");
-//                if (file.exists()){
-//                    file.delete();
-//                }
 //
 //                ffmpeglib.runScaleMedia(vh.getVideoPath(), "/storage/emulated/0/DCIM/Camera/output.mp4");
             }
@@ -185,15 +193,15 @@ public class VideoActivity extends BaseActivity {
             // 파일 경로
             String path = c.getString(c.getColumnIndex(Media.DATA));
             vh.setVideoPath(path);
-            long duration = ffmpeglib.getDuration(path) + 5000;
-            int hours, mins, secs, us;
-            secs  = (int)(duration / 1000000);
-            us    = (int)(duration % 1000000);
-            mins  = secs / 60;
-            secs %= 60;
-            hours = mins / 60;
-            mins %= 60;
-            tv.setText(hours+":"+mins+":"+secs);
+//            long duration = ffmpeglib.getDuration(path) + 5000;
+//            int hours, mins, secs, us;
+//            secs  = (int)(duration / 1000000);
+//            us    = (int)(duration % 1000000);
+//            mins  = secs / 60;
+//            secs %= 60;
+//            hours = mins / 60;
+//            mins %= 60;
+//            tv.setText(hours+":"+mins+":"+secs);
             int id = c.getInt(c.getColumnIndex(Media._ID));
 
             path = "file://"+getVideoThumbnail(id);

@@ -553,7 +553,7 @@ static void close_stream(AVFormatContext *oc, OutputStream *ost)
 /**************************************************************/
 /* media file output */
 
-int run_muxing(int argc, char **argv)
+int main(int argc, char **argv)
 {
     OutputStream video_st = { 0 }, audio_st = { 0 };
     const char *filename;

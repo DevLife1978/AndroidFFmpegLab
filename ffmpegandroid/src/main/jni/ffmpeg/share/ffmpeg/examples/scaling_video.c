@@ -115,7 +115,6 @@ int main(int argc, char **argv)
     }
     dst_bufsize = ret;
 
-
     for (i = 0; i < 100; i++) {
         /* generate synthetic video */
         fill_yuv_image(src_data, src_linesize, src_w, src_h, i);

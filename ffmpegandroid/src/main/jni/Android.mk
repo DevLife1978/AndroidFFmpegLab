@@ -1,60 +1,52 @@
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH := $(call my-dir)
+FFMPEG_PATH := $(LOCAL_PATH)/ffmpeg
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libavcodec
-LOCAL_SRC_FILES:= ffmpeg/lib/libavcodec-56.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_MODULE := avutil
+LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libavutil.so
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libavformat
-LOCAL_SRC_FILES:= ffmpeg/lib/libavformat-56.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_MODULE := avcodec
+LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libavcodec.so
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_SHARED_LIBRARIES := avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libswscale
-LOCAL_SRC_FILES:= ffmpeg/lib/libswscale-3.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_MODULE := avformat
+LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libavformat.so
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_SHARED_LIBRARIES := avcodec avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libavutil
-LOCAL_SRC_FILES:= ffmpeg/lib/libavutil-54.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_MODULE := avfilter
+LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libavfilter.so
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_SHARED_LIBRARIES := avcodec avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libavfilter
-LOCAL_SRC_FILES:= ffmpeg/lib/libavfilter-5.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_MODULE := swresample
+LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libswresample.so
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_SHARED_LIBRARIES := avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:= libwsresample
-LOCAL_SRC_FILES:= ffmpeg/lib/libswresample-1.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_MODULE := swscale
+LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libswscale.so
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_SHARED_LIBRARIES := avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := android-prebuilt
-LOCAL_SRC_FILES := libandroid.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
-include $(PREBUILT_SHARED_LIBRARY)
-
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := graphics-prebuilt
-LOCAL_SRC_FILES := libjnigraphics.so
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include
-include $(PREBUILT_SHARED_LIBRARY)
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE    := ffmpeglib
-LOCAL_SRC_FILES := ffmpeglib.c
-LOCAL_CFLAGS += -std=c99
-LOCAL_LDLIBS := -llog -lz
-LOCAL_SHARED_LIBRARIES := libavformat libavcodec libswscale libavutil android-prebuilt graphics-prebuilt
-
+LOCAL_MODULE := ffmpeg
+LOCAL_SRC_FILES := transcoding.c remuxing.c muxing.c ffmpeglib.c
+LOCAL_CFLAGS := -std=c99
+LOCAL_LDLIBS := -lz -lm  -ljnigraphics -llog
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_SHARED_LIBRARIES := avutil avcodec avformat swscale swresample avfilter
 include $(BUILD_SHARED_LIBRARY)

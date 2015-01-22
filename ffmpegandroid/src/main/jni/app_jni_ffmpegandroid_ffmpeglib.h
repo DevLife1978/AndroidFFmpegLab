@@ -34,10 +34,12 @@ JNIEXPORT jlong JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1length
 /*
  * Class:     app_jni_ffmpegandroid_ffmpeglib
  * Method:    ffmpeg_test
- * Signature: ()I
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jstring, jstring);
+
+int extract_thumbnail(const char * video_path, const char * thumbnail_output_path);
 
 #ifdef __cplusplus
 }
