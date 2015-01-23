@@ -44,7 +44,7 @@ include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ffmpeg
-LOCAL_SRC_FILES := transcoding.c remuxing.c muxing.c ffmpeglib.c
+LOCAL_SRC_FILES := transcoding.c ffmpeglib.c
 LOCAL_CFLAGS := -std=c99
 LOCAL_LDLIBS := -lz -lm  -ljnigraphics -llog
 LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include

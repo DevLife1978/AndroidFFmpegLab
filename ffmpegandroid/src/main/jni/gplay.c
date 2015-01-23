@@ -268,7 +268,7 @@ int engine_start(char* fname) {
     // open audio codec
     avcodec_open(AudioCodecCtx, aCodec);
 
-    packet_queue_init(&audioq);
+    packet_queue_init(&audio_queue);
 
     // attach thread for audio play
     ret = pthread_create(&async_tid, NULL, play, (void *)AudioCodecCtx);
@@ -292,4 +292,18 @@ int engine_start(char* fname) {
     }
 
     vFrame = av_frame_alloc();
+
+    hovideo_prepare(0, 0, VideoCodecCtx->width, VideoCodecCtx->height, VideoCodecCtx->width, VideoCodecCtx->height, 21);
+
+    // transcoding for show to screen of decodec video data
+    // using software converter
+    AVFrame *pFrameyub420p = av_frame_alloc();
+    int destFormat = AV_PIX_FMT_YUV420P;
+    int numBytes = avpicture_get_size(destFormat, VideoCodecCtx->width, VideoCodecCtx->height);
+    uint8_t *buffer = (uint8_t *)av_malloc(numBytes * sizeof(uint8_t));
+    avpicture_fill((AVPicture *)pFrameyub420p, buffer, destFormat, VideoCodecCtx->width, VideoCodecCtx->height);
+    AVPicture *dst = (AVPicture *)pFrameyub420p;
+
+    i=0;
+    av_init_packet(&packet);
 }

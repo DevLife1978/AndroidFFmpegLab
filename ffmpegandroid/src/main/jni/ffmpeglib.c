@@ -20,6 +20,7 @@
 #include "remuxing.h"
 #include "muxing.h"
 #include "transcoding.h"
+#include "demuxing.h"
 
 void audio_decode(const char *output, const char *input, AVCodecContext *ctx);
 void video_decode(const char *outfilename, const char *filename);
@@ -423,6 +424,8 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
     const char *output_path = (*env)->GetStringUTFChars(env, output, 0);
 
     av_log_set_callback(log_callback);
+
+//    demuxing(input_path, "/sdcard/Movies/output_video", "/sdcard/Movies/output_audio");
 //    show_codecs();
     downstream(input_path, output_path);
 //    muxing(output_path);

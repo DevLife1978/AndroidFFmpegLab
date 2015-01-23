@@ -10,10 +10,10 @@ public class ffmpeglib {
     static boolean initialized = false;
     public ffmpeglib() {
         super();
-//        if (initialized == false) {
-//            initialized = true;
-//            initialize();
-//        }
+        if (initialized == false) {
+            initialized = true;
+            initialize();
+        }
     }
 
 //    public void dump2log(String mediaPath) {
