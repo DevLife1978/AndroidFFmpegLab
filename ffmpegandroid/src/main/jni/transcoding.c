@@ -21,6 +21,7 @@ void finish(int result);
 int open_input(const char* input);
 int open_output(const char* output);
 int add_stream(OutputStream *ost, AVFormatContext *ofc, AVCodec **codec, enum AVCodecID codec_id, AVCodecContext *icctx);
+int open_video(AVFormatContext *ofctc, enum AVCodecID codec_id, AVStream **stream, AVDictionary *options);
 
 AVFormatContext *ifmtctx;
 AVCodecContext *ivcctx;
@@ -239,4 +240,7 @@ end:
         cctx->flags != CODEC_FLAG_GLOBAL_HEADER;
     }
     return ret;
+}
+
+int open_video(AVFormatContext *ofctc, enum AVCodecID codec_id, AVStream **stream, AVDictionary *options) {
 }
