@@ -31,20 +31,20 @@ include $(PREBUILT_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := swresample
 LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libswresample.so
-LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include/libswresample
 LOCAL_SHARED_LIBRARIES := avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := swscale
 LOCAL_SRC_FILES := $(FFMPEG_PATH)/lib/libswscale.so
-LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include
+LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include/libswscale
 LOCAL_SHARED_LIBRARIES := avutil
 include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ffmpeg
-LOCAL_SRC_FILES := transcoding.c ffmpeglib.c
+LOCAL_SRC_FILES := transcoding.c muxing.c ffmpeglib.c
 LOCAL_CFLAGS := -std=c99
 LOCAL_LDLIBS := -lz -lm  -ljnigraphics -llog
 LOCAL_EXPORT_C_INCLUDES := $(FFMPEG_PATH)/include

@@ -571,16 +571,16 @@ int muxing(const char *output)
 
     /* Add the audio and video streams using the default format codecs
      * and initialize the codecs. */
-    if (fmt->video_codec != AV_CODEC_ID_NONE) {
-        add_stream(&video_st, oc, &video_codec, fmt->video_codec);
+//    if (fmt->video_codec != AV_CODEC_ID_NONE) {
+        add_stream(&video_st, oc, &video_codec, AV_CODEC_ID_MPEG4);
         have_video = 1;
         encode_video = 1;
-    }
-    if (fmt->audio_codec != AV_CODEC_ID_NONE) {
-        add_stream(&audio_st, oc, &audio_codec, fmt->audio_codec);
+//    }
+//    if (fmt->audio_codec != AV_CODEC_ID_NONE) {
+        add_stream(&audio_st, oc, &audio_codec, AV_CODEC_ID_AC3);
         have_audio = 1;
         encode_audio = 1;
-    }
+//    }
 
     /* Now that all the parameters are set, we can open the audio and
      * video codecs and allocate the necessary encode buffers. */

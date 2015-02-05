@@ -64,6 +64,9 @@ JNIEXPORT jlong JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1length(JNIEn
         __android_log_print(ANDROID_LOG_INFO, "FFMPEG", "input file error");
         return 0;
     }
+    if(0 > avformat_find_stream_info(media_format, NULL)) {
+        LOGE("Couldn't find stream info");
+    }
     int64_t duration = media_format->duration;
     avformat_close_input(&media_format);
     media_format = NULL;
@@ -142,7 +145,8 @@ int show_codecs()
     const AVCodecDescriptor **codecs;
     unsigned i, nb_codecs = get_codecs_sorted(&codecs);
 
-    LOGI("Codecs:\n"
+    char codec_info[400];
+    sprintf(codec_info,"\nCodecs:\n"
            " D..... = Decoding supported\n"
            " .E.... = Encoding supported\n"
            " ..V... = Video codec\n"
@@ -152,6 +156,7 @@ int show_codecs()
            " ....L. = Lossy compression\n"
            " .....S = Lossless compression\n"
            " -------\n");
+    LOGI("%s", codec_info);
     for (i = 0; i < nb_codecs; i++) {
         const AVCodecDescriptor *desc = codecs[i];
         const AVCodec *codec = NULL;
@@ -160,7 +165,7 @@ int show_codecs()
             continue;
 
         char des[1000];
-        sprintf(des, " %s%s%c%s%s%s %-20s %s",
+        sprintf(des, "%s%s%c%s%s%s %-20s %s",
         (avcodec_find_decoder(desc->id) ? "D" : "."),
         (avcodec_find_encoder(desc->id) ? "E" : "."),
         (get_media_type_char(desc->type)),
@@ -187,7 +192,6 @@ int show_codecs()
 //            }
 //        }
 
-        LOGI("\n");
     }
     av_free(codecs);
     return 0;
@@ -417,7 +421,51 @@ static void log_callback(void *ptr, int level, const char *fmt, va_list vl) {
     }
 }
 
+static void dump_output_format(AVOutputFormat *format, int audio_codec_id, int video_codec_id) {
+    LOGI("\n\t\t\t\t\t\t< dump output format>");
+    LOGI("name -> %s", format->name);
+    LOGI("long name -> %s", format->long_name);
+    LOGI("mime type -> %s", format->mime_type);
+    LOGI("extensions -> %s", format->extensions);
 
+    int audio_codec = 0 < audio_codec_id ? audio_codec_id : format->audio_codec;
+    int video_codec = 0 < video_codec_id ? video_codec_id : format->video_codec;
+
+    AVCodec *audio_encoder = avcodec_find_encoder(audio_codec);
+    const char * audio_encoder_name = avcodec_get_name(audio_codec);
+    AVCodec *video_encoder = avcodec_find_encoder(video_codec);
+    const char * video_encoder_name = avcodec_get_name(video_codec);
+    LOGI("%s audio encoder finding %s", audio_encoder_name, !audio_encoder ? "failed" : "succeed");
+    LOGI("%s video encoder finding %s", video_encoder_name, !video_encoder ? "failed" : "succeed");
+
+    AVCodec *subtitle_encoder = avcodec_find_encoder(format->subtitle_codec);
+    const char *subtitle_encoder_name = avcodec_get_name(format->subtitle_codec);
+    LOGI("%s subtitle encoder finding %s", subtitle_encoder_name, !subtitle_encoder ? "failed" : "succeed");
+
+    AVCodecContext *audio_context = avcodec_alloc_context3(audio_encoder);
+    AVCodecContext *video_context = avcodec_alloc_context3(video_encoder);
+
+    char codec_string[1000];
+
+    if(!audio_context) {
+        LOGE("Couldn't open audio codec context");
+    }
+    else {
+        avcodec_string(codec_string, 1000*sizeof(char), audio_context, 1);
+        LOGI("%s", codec_string);
+    }
+
+    if(!video_context) {
+        LOGE("Couldn't open video codec context");
+    }
+    else {
+        avcodec_string(codec_string, 1000*sizeof(char), video_context, 1);
+        LOGI("%s", codec_string);
+    }
+
+    avcodec_close(audio_context);
+    avcodec_close(video_context);
+}
 
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv *env, jobject obj, jstring input, jstring output) {
     const char *input_path = (*env)->GetStringUTFChars(env, input, 0);
@@ -425,10 +473,15 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
 
     av_log_set_callback(log_callback);
 
-//    demuxing(input_path, "/sdcard/Movies/output_video", "/sdcard/Movies/output_audio");
 //    show_codecs();
-    downstream(input_path, output_path);
-//    muxing(output_path);
-//    remuxing(input_path, output_path);
-//    extract_thumbnail(input_path, "/sdcard/Download/output.png");
+    transcoding(input_path, output_path);
+
+//    muxing("/sdcard/Movies/output.mp4");
+//    AVOutputFormat *ofmt = av_guess_format(NULL, output_path, NULL);
+//    if(!ofmt) {
+//        LOGE("Couldn't guess output format");
+//    }
+//    else {
+//        dump_output_format(ofmt, 0, 0);
+//    }
 }

@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import java.io.File;
 
 import app.jni.ffmpegandroid.ffmpeglib;
 
@@ -18,6 +21,10 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        File gtempDir = new File("/sdcard/gtemp");
+        if(gtempDir.mkdir()) {
+
+        }
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

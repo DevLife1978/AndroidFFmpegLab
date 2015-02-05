@@ -17,7 +17,12 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.ResponseHandlerInterface;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -25,7 +30,37 @@ import com.nostra13.universalimageloader.core.assist.ImageScaleType;
 import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.PauseOnScrollListener;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 
 import app.jni.ffmpegandroid.ffmpeglib;
 
@@ -79,10 +114,80 @@ public class VideoActivity extends BaseActivity {
                 }
 
                 final CustomAdapter.ViewHolder vh = (CustomAdapter.ViewHolder) view.getTag();
+                Log.i("Video", vh.getVideoPath());
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        long time = System.currentTimeMillis();
                         ffmpeglib.ffmpeg_test(vh.getVideoPath(), filename);
+                        Log.i("FFMPEG", "Test " + (System.currentTimeMillis() - time));
+//                        HttpClient client = new DefaultHttpClient();
+//                        HttpGet get = new HttpGet("http://192.168.0.35:3000/getWriteKey");
+//                        InputStream is = null;
+//                        HttpURLConnection postConnection;
+//                        try {
+//                            HttpResponse response = client.execute(get);
+//                            // 본문 읽기
+//                            HttpEntity re = response.getEntity();
+//                            is = re.getContent();
+//                            BufferedReader bf = null;
+//                            try {
+//                                bf = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+//                            } catch (UnsupportedEncodingException e) {
+//                                e.printStackTrace();
+//                            }
+//                            StringBuilder buff = new StringBuilder();
+//                            String line;
+//                            if (bf != null) {
+//                                while ((line = bf.readLine()) != null) {
+//                                    buff.append(line);
+//                                }
+//                            }
+//                            JSONObject obj = new JSONObject(buff.toString());
+//
+//                            final String key = obj.getString("result_group");
+//                            Log.i("Result", key);
+//
+//                            HttpClient httpClient = new DefaultHttpClient();
+//                            HttpContext localContext = new BasicHttpContext();
+//                            HttpPost httpPost = new HttpPost("http://192.168.0.35:3000/upload");
+//
+//                            runOnUiThread(new Runnable() {
+//                                @Override
+//                                public void run() {
+//                                    AsyncHttpClient asyncClient = new AsyncHttpClient();
+//                                    RequestParams params = new RequestParams();
+//                                    File imageFile = new File(vh.getVideoPath());
+//                                    params.put("write_key", key);
+//                                    try {
+//                                        params.put("video", imageFile);
+//                                    } catch (FileNotFoundException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                    asyncClient.post(VideoActivity.this, "http://192.168.0.35:3000/upload", params, new AsyncHttpResponseHandler() {
+//                                        @Override
+//                                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+//                                            Log.i("Success", new String(responseBody));
+//                                        }
+//
+//                                        @Override
+//                                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+//                                            if(error != null) {
+//                                                error.printStackTrace();
+//                                            }
+//                                        }
+//                                    });
+//                                }
+//                            });
+//
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        } catch (JSONException e) {
+//                            e.printStackTrace();
+//                        }
+//                        finally {
+//
+//                        }
                     }
                 }).start();
 //                ffmpeglib.dump2log(vh.getVideoPath());
@@ -193,15 +298,15 @@ public class VideoActivity extends BaseActivity {
             // 파일 경로
             String path = c.getString(c.getColumnIndex(Media.DATA));
             vh.setVideoPath(path);
-//            long duration = ffmpeglib.getDuration(path) + 5000;
-//            int hours, mins, secs, us;
-//            secs  = (int)(duration / 1000000);
-//            us    = (int)(duration % 1000000);
-//            mins  = secs / 60;
-//            secs %= 60;
-//            hours = mins / 60;
-//            mins %= 60;
-//            tv.setText(hours+":"+mins+":"+secs);
+            long duration = ffmpeglib.media_length(path) + 5000;
+            int hours, mins, secs, us;
+            secs  = (int)(duration / 1000000);
+            us    = (int)(duration % 1000000);
+            mins  = secs / 60;
+            secs %= 60;
+            hours = mins / 60;
+            mins %= 60;
+            tv.setText((10 > hours ? "0"+hours : hours)+":" + ( 10 > mins ? "0" + mins : mins ) + ":" + ( 10 > secs ? "0" : "") + secs);
             int id = c.getInt(c.getColumnIndex(Media._ID));
 
             path = "file://"+getVideoThumbnail(id);
