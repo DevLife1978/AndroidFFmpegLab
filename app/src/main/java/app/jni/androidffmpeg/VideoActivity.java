@@ -173,7 +173,7 @@ public class VideoActivity extends BaseActivity {
                             sb.append("input length -> " + (int) (input_file.length() / 1024.0 / 1024.0) + "M");
                             sb.append('\n');
                         }
-                        sb.append("Test " + (System.currentTimeMillis() - time) / 1000 + " min");
+                        sb.append("Test " + (System.currentTimeMillis() - time) / 1000 + " sec");
                         sb.append('\n');
                         File output_file = new File(filename);
                         if(null != output_file) {
