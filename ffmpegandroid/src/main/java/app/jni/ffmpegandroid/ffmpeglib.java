@@ -34,4 +34,5 @@ public class ffmpeglib {
 //    private native void dump(String mediaPath);
     public native long media_length(String mediaPath);
     public native void ffmpeg_test(String input_path, String output_path);
+    public native void stop();
 }

@@ -18,4 +18,5 @@
 #include "log.h"
 
 void init(void);
+void encoding_stop();
 int transcoding(const char *input, const char *output);

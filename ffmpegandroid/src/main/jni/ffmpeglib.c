@@ -485,3 +485,8 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
 //        dump_output_format(ofmt, 0, 0);
 //    }
 }
+
+JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_stop(JNIEnv *env, jobject obj)
+{
+    encoding_stop();
+}

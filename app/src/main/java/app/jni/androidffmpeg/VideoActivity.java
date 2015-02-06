@@ -100,6 +100,18 @@ public class VideoActivity extends BaseActivity {
 
         setContentView(R.layout.activity_record);
 
+        findViewById(R.id.stop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ffmpeglib.stop();
+                    }
+                }).start();
+            }
+        });
+
         mGridView = (GridView) findViewById(R.id.gridView);
         mGridView.setChoiceMode(GridView.CHOICE_MODE_MULTIPLE_MODAL);
         mGridView.setNumColumns(4);
@@ -109,7 +121,7 @@ public class VideoActivity extends BaseActivity {
 
                 final String filename = "/sdcard/Movies/output.mp4";
                 File file = new File(filename);
-                if (file.exists()){
+                if (file.exists()) {
                     file.delete();
                 }
 
@@ -120,74 +132,7 @@ public class VideoActivity extends BaseActivity {
                     public void run() {
                         long time = System.currentTimeMillis();
                         ffmpeglib.ffmpeg_test(vh.getVideoPath(), filename);
-                        Log.i("FFMPEG", "Test " + (System.currentTimeMillis() - time));
-//                        HttpClient client = new DefaultHttpClient();
-//                        HttpGet get = new HttpGet("http://192.168.0.35:3000/getWriteKey");
-//                        InputStream is = null;
-//                        HttpURLConnection postConnection;
-//                        try {
-//                            HttpResponse response = client.execute(get);
-//                            // 본문 읽기
-//                            HttpEntity re = response.getEntity();
-//                            is = re.getContent();
-//                            BufferedReader bf = null;
-//                            try {
-//                                bf = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-//                            } catch (UnsupportedEncodingException e) {
-//                                e.printStackTrace();
-//                            }
-//                            StringBuilder buff = new StringBuilder();
-//                            String line;
-//                            if (bf != null) {
-//                                while ((line = bf.readLine()) != null) {
-//                                    buff.append(line);
-//                                }
-//                            }
-//                            JSONObject obj = new JSONObject(buff.toString());
-//
-//                            final String key = obj.getString("result_group");
-//                            Log.i("Result", key);
-//
-//                            HttpClient httpClient = new DefaultHttpClient();
-//                            HttpContext localContext = new BasicHttpContext();
-//                            HttpPost httpPost = new HttpPost("http://192.168.0.35:3000/upload");
-//
-//                            runOnUiThread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    AsyncHttpClient asyncClient = new AsyncHttpClient();
-//                                    RequestParams params = new RequestParams();
-//                                    File imageFile = new File(vh.getVideoPath());
-//                                    params.put("write_key", key);
-//                                    try {
-//                                        params.put("video", imageFile);
-//                                    } catch (FileNotFoundException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                    asyncClient.post(VideoActivity.this, "http://192.168.0.35:3000/upload", params, new AsyncHttpResponseHandler() {
-//                                        @Override
-//                                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-//                                            Log.i("Success", new String(responseBody));
-//                                        }
-//
-//                                        @Override
-//                                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-//                                            if(error != null) {
-//                                                error.printStackTrace();
-//                                            }
-//                                        }
-//                                    });
-//                                }
-//                            });
-//
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        } catch (JSONException e) {
-//                            e.printStackTrace();
-//                        }
-//                        finally {
-//
-//                        }
+                        Log.i("FFMPEG", "Test " + (System.currentTimeMillis() - time) / 1000 / 60 + " min");
                     }
                 }).start();
 //                ffmpeglib.dump2log(vh.getVideoPath());
