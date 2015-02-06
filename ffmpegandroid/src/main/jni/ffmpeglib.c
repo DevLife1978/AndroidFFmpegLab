@@ -22,6 +22,7 @@
 #include "transcoding.h"
 #include "demuxing.h"
 
+
 void audio_decode(const char *output, const char *input, AVCodecContext *ctx);
 void video_decode(const char *outfilename, const char *filename);
 static int decode_write_frame(const char *outfilename, AVCodecContext *avctx,
@@ -41,6 +42,34 @@ static void av_dump_codec(AVCodecContext *ctx) {
     LOGI("global quality %d", ctx->global_quality);
     LOGI("compression level %d", ctx->compression_level);
     LOGI("pixel format %d", ctx->pix_fmt);
+}
+
+static JNIEnv *global_env;
+static jobject global_obj;
+
+void log_frame(int frame, int total_frame) {
+    jclass cls = (*global_env)->GetObjectClass(global_env, global_obj);
+
+    jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireCallback", "(II)V");
+    if( 0 == func ) {
+        LOGE("Couldn't find method");
+    }
+    else {
+        (*global_env)->CallVoidMethod(global_env, global_obj, func, frame, total_frame);
+    }
+}
+
+void log_finish(int err, const char *err_str) {
+    jclass cls = (*global_env)->GetObjectClass(global_env, global_obj);
+
+    jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireFinish", "(ILjava/lang/String;)V");
+    if( 0 == func ) {
+        LOGE("Couldn't find method");
+    }
+    else {
+        jstring errString = (*global_env)->NewStringUTF(global_env, err_str);
+        (*global_env)->CallVoidMethod(global_env, global_obj, func, err, errString);
+    }
 }
 
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_dump(JNIEnv *env, jobject obj, jstring string)
@@ -71,6 +100,29 @@ JNIEXPORT jlong JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1length(JNIEn
     avformat_close_input(&media_format);
     media_format = NULL;
     return duration;
+}
+
+JNIEXPORT jint JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1total_1frame(JNIEnv *env, jobject obj, jstring string) {
+    const char * media_path = (*env)->GetStringUTFChars(env, string, 0);
+//    __android_log_print(ANDROID_LOG_INFO, "FFMPEG", "Media path -> %s", media_path);
+    AVFormatContext *media_format = NULL;
+    if(avformat_open_input(&media_format, media_path, NULL, NULL)) {
+        __android_log_print(ANDROID_LOG_INFO, "FFMPEG", "input file error");
+        return 0;
+    }
+    if(0 > avformat_find_stream_info(media_format, NULL)) {
+        LOGE("Couldn't find stream info");
+    }
+    int frames = 0;
+    int video_stream_index = av_find_best_stream(media_format, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if( video_stream_index < 0 ) {
+        return 0;
+    }
+    AVStream *video_stream = media_format->streams[video_stream_index];
+    frames = video_stream->nb_frames;
+    avformat_close_input(&media_format);
+    media_format = NULL;
+    return frames;
 }
 
 char get_media_type_char(enum AVMediaType type)
@@ -468,10 +520,14 @@ static void dump_output_format(AVOutputFormat *format, int audio_codec_id, int v
 }
 
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv *env, jobject obj, jstring input, jstring output) {
+
+    global_env = env;
+    global_obj = obj;
+
     const char *input_path = (*env)->GetStringUTFChars(env, input, 0);
     const char *output_path = (*env)->GetStringUTFChars(env, output, 0);
 
-    av_log_set_callback(log_callback);
+//    av_log_set_callback(log_callback);
 
 //    show_codecs();
     transcoding(input_path, output_path);

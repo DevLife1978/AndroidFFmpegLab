@@ -5,6 +5,7 @@
 #include <libavutil/stereo3d.h>
 #include <libavutil/replaygain.h>
 #include <libavutil/intreadwrite.h>
+#include <app_jni_ffmpegandroid_ffmpeglib.h>
 
 #define MIN(a, b) ((a)<(b)) ? (a) : (b);
 
@@ -145,6 +146,7 @@ int transcoding(const char * input, const char * output) {
 //    }
 //    LOGI("Rotate %f", rotate);
     double rate = 1.0;
+    double bit_rate = ivcctx->bit_rate;
     if(srcw > dstw || srch > dsth) {
         if(srcw > srch) {
             dstw = 1280;
@@ -167,7 +169,9 @@ int transcoding(const char * input, const char * output) {
         dstw = srcw;
         dsth = srch;
     }
-    LOGI("Destination size %d x %d", dstw, dsth);
+    bit_rate = bit_rate * (double)(dstw * dsth) / (double)(srcw * srch) / 4.0;
+    LOGI("Output size %d x %d", dstw, dsth);
+    LOGI("Output bit rate %f", bit_rate);
     int dst_pix_fmt = ivcctx->pix_fmt;
 
     if(ovstream) {
@@ -178,17 +182,20 @@ int transcoding(const char * input, const char * output) {
             goto end;
         }
 
-        int fps = av_q2d(ivstream->avg_frame_rate);
-        if( 0 >= fps ) {
-            goto end;
-        }
-        ovcctx->bit_rate = ivcctx->bit_rate;
+        ovcctx->bit_rate = bit_rate;
         ovcctx->width = dstw;
         ovcctx->height = dsth;
-        ovstream->time_base = (AVRational){1, fps};
+        int fps = av_q2d(ivstream->avg_frame_rate);
+        if( 0 >= fps ) {
+            ovstream->time_base = (AVRational){1, 25};
+        }
+        else {
+            ovstream->time_base = (AVRational){1, fps};
+        }
         ovcctx->time_base = ovstream->time_base;
         ovcctx->gop_size = ivcctx->gop_size;
         ovcctx->pix_fmt = ivcctx->pix_fmt;
+        ovcctx->max_b_frames = 0;
 
         ovcctx->profile = FF_PROFILE_H264_BASELINE;
 
@@ -256,6 +263,7 @@ int transcoding(const char * input, const char * output) {
         goto end;
     }
 
+    int total_frame = ivstream->nb_frames;
     LOGI("Total input video frame count %" PRId64 "", ivstream->nb_frames);
     int got_frame;
     ret = av_read_frame(ifctx, &packet);
@@ -287,6 +295,7 @@ int transcoding(const char * input, const char * output) {
                     }
                     if(got_packet) {
                         av_copy_packet_side_data(&pkt, &packet);
+                        log_frame(frame->coded_picture_number, total_frame);
                         ret = write_frame(ofctx, &ovcctx->time_base, ovstream, &pkt);
                     }
                     else {
@@ -377,10 +386,10 @@ int transcoding(const char * input, const char * output) {
 
 end:
 
-    LOGI("Play the output video file with the command:\n"
-                   "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
-                   av_get_pix_fmt_name(dst_pix_fmt), dstw, dsth,
-                   "video.tmp");
+//    LOGI("Play the output video file with the command:\n"
+//                   "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
+//                   av_get_pix_fmt_name(dst_pix_fmt), dstw, dsth,
+//                   "video.tmp");
 
     LOGI("Finished");
 
@@ -405,7 +414,10 @@ end:
     avformat_free_context(ofctx);
 //    av_free(video_dst_data[0]);
     sws_freeContext(swsctx);
+    char *error_str = "";
     if( 0 > ret ) {
+        error_str = av_err2str(ret);
         LOGE("Error (%s)", av_err2str(ret));
     }
+    log_finish(ret, error_str);
 }

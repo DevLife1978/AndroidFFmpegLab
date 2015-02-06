@@ -19,4 +19,5 @@
 
 void init(void);
 void encoding_stop();
+void set_transcoding_callback(void (*callback)(int, int), void (*callback2)(int, const char *));
 int transcoding(const char *input, const char *output);

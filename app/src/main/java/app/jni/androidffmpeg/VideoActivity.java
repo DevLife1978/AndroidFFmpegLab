@@ -1,5 +1,7 @@
 package app.jni.androidffmpeg;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
@@ -120,19 +122,74 @@ public class VideoActivity extends BaseActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 final String filename = "/sdcard/Movies/output.mp4";
-                File file = new File(filename);
+                final File file = new File(filename);
                 if (file.exists()) {
                     file.delete();
                 }
 
                 final CustomAdapter.ViewHolder vh = (CustomAdapter.ViewHolder) view.getTag();
                 Log.i("Video", vh.getVideoPath());
+                final int total_frames = ffmpeglib.media_total_frame(vh.getVideoPath());
+                final ProgressDialog progressDialog = new ProgressDialog(VideoActivity.this);
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                progressDialog.setTitle("Transcoding...");
+                progressDialog.setMax(total_frames);
+                progressDialog.show();
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         long time = System.currentTimeMillis();
+                        ffmpeglib.setCallback(new ffmpeglib.FFmpegLibraryCallback() {
+                            @Override
+                            public void onDecodedTime(int frame, int total_frame) {
+                                Log.i("Transcoding", frame + " / " + total_frame);
+                                progressDialog.setMax(total_frame);
+                                progressDialog.setProgress(frame);
+                            }
+
+                            @Override
+                            public void onFinished(int ret, String error) {
+                                Log.i("Transcoding", "Finished : " + error);
+                                progressDialog.dismiss();
+                            }
+
+
+                        });
                         ffmpeglib.ffmpeg_test(vh.getVideoPath(), filename);
-                        Log.i("FFMPEG", "Test " + (System.currentTimeMillis() - time) / 1000 / 60 + " min");
+                        long duration = ffmpeglib.media_length(vh.getVideoPath()) + 5000;
+                        int hours, mins, secs, us;
+                        secs  = (int)(duration / 1000000);
+                        us    = (int)(duration % 1000000);
+                        mins  = secs / 60;
+                        secs %= 60;
+                        hours = mins / 60;
+                        mins %= 60;
+
+                        final StringBuilder sb = new StringBuilder();
+                        sb.append("Original " + ((int)(duration / 1000000)));
+                        sb.append("\n");
+                        File input_file = new File(vh.getVideoPath());
+                        if(null != input_file) {
+                            sb.append("input length -> " + (int) (input_file.length() / 1024.0 / 1024.0) + "M");
+                            sb.append('\n');
+                        }
+                        sb.append("Test " + (System.currentTimeMillis() - time) / 1000 + " min");
+                        sb.append('\n');
+                        File output_file = new File(filename);
+                        if(null != output_file) {
+                            sb.append("output length -> " + (int)(output_file.length() / 1024.0 / 1024.0 ) + "M");
+                        }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                AlertDialog.Builder alert = new AlertDialog.Builder(VideoActivity.this);
+                                alert.setTitle("Transcoding result");
+                                alert.setMessage(sb.toString());
+                                alert.show();
+                            }
+                        });
+
                     }
                 }).start();
 //                ffmpeglib.dump2log(vh.getVideoPath());

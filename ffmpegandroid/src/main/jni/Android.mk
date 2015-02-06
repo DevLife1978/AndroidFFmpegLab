@@ -1,5 +1,5 @@
 LOCAL_PATH := $(call my-dir)
-FFMPEG_PATH := $(LOCAL_PATH)/ffmpeg
+FFMPEG_PATH := $(LOCAL_PATH)/$(TARGET_ARCH_ABI)/ffmpeg
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := avutil

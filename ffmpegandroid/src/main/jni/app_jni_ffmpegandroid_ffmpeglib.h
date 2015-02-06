@@ -25,6 +25,14 @@ JNIEXPORT jlong JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1length
 
 /*
  * Class:     app_jni_ffmpegandroid_ffmpeglib
+ * Method:    media_total_frame
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1total_1frame
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     app_jni_ffmpegandroid_ffmpeglib
  * Method:    ffmpeg_test
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
@@ -38,6 +46,10 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test
  */
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_stop
   (JNIEnv *, jobject);
+
+void log_frame(int frame, int total_frame);
+
+void log_finish(int err, const char *err_str);
 
 #ifdef __cplusplus
 }
