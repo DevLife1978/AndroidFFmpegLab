@@ -49,7 +49,7 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_stop
 
 void log_frame(int frame, int total_frame);
 
-void log_finish(int err, const char *err_str);
+void log_finish();
 
 #ifdef __cplusplus
 }

@@ -7,10 +7,21 @@
 #include <libavutil/intreadwrite.h>
 #include <app_jni_ffmpegandroid_ffmpeglib.h>
 
+#define prepare_time() struct timespec tstart={0,0}, tend={0,0}
+#define start_time() clock_gettime(CLOCK_MONOTONIC, &tstart)
+#define end_time() clock_gettime(CLOCK_MONOTONIC, &tend)
+#define print_time(msg) LOGI("%s duration %.5f seconds", msg, (((double)tend.tv_sec + 1.0e-9 * tend.tv_nsec)-((double)tstart.tv_sec + 1.0e-9 * tstart.tv_nsec)))
+
 #define MIN(a, b) ((a)<(b)) ? (a) : (b);
 
 #define checkend(value, ...) if( 0 > value ) { LOGE(__VA_ARGS__); goto end; }
 #define checkendr(value, result, ...) if( 0 > value ) { LOGE(__VA_ARGS__); result; }
+
+void (*finish)();
+
+void set_finish(void (*finish_func)()) {
+    finish = finish_func;
+}
 
 static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt)
 {
@@ -78,7 +89,8 @@ int transcoding(const char * input, const char * output) {
     AVStream *ivstream = ifctx->streams[video_stream_index];
     AVCodecContext *ivcctx = ivstream->codec;
     LOGI("Find video stream for %s", ivdecoder->name);
-
+    ivstream->codec->flags2 |= CODEC_FLAG2_FAST;
+    av_opt_set(ivstream->codec->priv_data, "tune", "zerolatency,fastdecode", 0);
     ret = avcodec_open2(ivcctx, ivdecoder, NULL);
     checkend(ret, "Couldn't open %s video decoder", ivdecoder->name);
 
@@ -213,8 +225,9 @@ int transcoding(const char * input, const char * output) {
         ovcctx->qmax = ivcctx->qmax;
         ovcctx->max_qdiff = ivcctx->max_qdiff;
 //        ovcctx->time_base = (AVRational){1, fps};
-//        av_opt_set(ovcctx->priv_data, "preset", "ultrafast", 0);
-//        av_opt_set(ovcctx->priv_data, "tune", "zerolatency", 0);
+        av_opt_set(ovcctx->priv_data, "preset", "ultrafast", 0);
+        av_opt_set(ovcctx->priv_data, "tune", "zerolatency,fastdecode", 0);
+        ovcctx->flags2 |= CODEC_FLAG2_FAST;
 //        ovcctx->time_base = ivcctx->time_base;
 //        ovcctx->time_base.den /= 2;
 //        ovstream->r_frame_rate.den /= 2;
@@ -296,7 +309,6 @@ int transcoding(const char * input, const char * output) {
     LOGI("Total input video frame count %" PRId64 "", ivstream->nb_frames);
     int got_frame;
     ret = av_read_frame(ifctx, &packet);
-    LOGI("Start transcode %s", "yes");
     while( 0 <= av_read_frame(ifctx, &packet)) {
         if(is_finish) {
             break;
@@ -308,15 +320,20 @@ int transcoding(const char * input, const char * output) {
             }
             int decoded = packet.size;
             if( video_stream_index == packet.stream_index) {
+                prepare_time();
+                start_time();
                 ret = avcodec_decode_video2(ivcctx, frame, &got_frame, &packet);
+                end_time();
+                print_time("Decoding");
                 checkendr(ret, break, "Couldn't decode video");
                 if(got_frame) {
+//                    start_time();
                     int oh = sws_scale(swsctx, frame->data, frame->linesize, 0, ivcctx->height, oframe->data, oframe->linesize);
+//                    end_time();
+//                    print_time("Resizing");
                     int got_packet = 0;
                     AVPacket pkt = {0};
                     av_init_packet(&pkt);
-//                    av_packet_rescale_ts(&pkt, ivcctx->time_base, ovcctx->time_base);
-//                    oframe->pts = frame->coded_picture_number;
                     pkt.pts = packet.pts;
                     pkt.dts = packet.dts;
                     int64_t pts = packet.pts;
@@ -340,9 +357,10 @@ int transcoding(const char * input, const char * output) {
                     pkt.duration = duration;
                     pkt.convergence_duration = convergence_duration;
                     oframe->pts = pts;
-//                    oframe->pts = packet.pts != AV_NOPTS_VALUE ? av_rescale_q(packet.pts, ivstream->time_base, ovstream->time_base) : oframe->pts + 1;
-
+//                    start_time();
                     ret = avcodec_encode_video2(ovcctx, &pkt, oframe, &got_packet);
+//                    end_time();
+//                    print_time("Encoding");
                     if( 0 > ret ) {
                         LOGE("Couldn't encoding video frame: %s", av_err2str(ret));
                         av_free_packet(&pkt);
@@ -386,71 +404,7 @@ int transcoding(const char * input, const char * output) {
 
     packet.data = NULL;
     packet.size = 0;
-
-    ret = avcodec_decode_video2(ivcctx, frame, &got_frame, &packet);
-    if(got_frame) {
-        if(packet.stream_index == video_stream_index) {
-            LOGI("Video flushing decoded -> %d", frame->coded_picture_number);
-            sws_scale(swsctx, (const uint8_t * const *)frame->data, frame->linesize, 0, ivcctx->height, oframe->data, oframe->linesize);
-
-            int got_packet = 0;
-            AVPacket pkt = {0};
-            av_init_packet(&pkt);
-
-            pkt.pts = packet.pts;
-            pkt.dts = packet.dts;
-            int64_t pts = packet.pts;
-            int64_t dts = packet.dts;
-            int duration = packet.duration;
-            int convergence_duration = packet.convergence_duration;
-            if(pts != AV_NOPTS_VALUE) {
-                pts = av_rescale_q(pts, ivcctx->time_base, ovcctx->time_base);
-            }
-            if(dts != AV_NOPTS_VALUE) {
-                dts = av_rescale_q(dts, ivcctx->time_base, ovcctx->time_base);
-            }
-            if(duration > 0) {
-                duration = av_rescale_q(duration, ivcctx->time_base, ovcctx->time_base);
-            }
-            if(convergence_duration > 0) {
-                convergence_duration = av_rescale_q(convergence_duration, ivcctx->time_base, ovcctx->time_base);
-            }
-            pkt.pts = pts;
-            pkt.dts = dts;
-            pkt.duration = duration;
-            pkt.convergence_duration = convergence_duration;
-            oframe->pts = pts;
-
-            ret = avcodec_encode_video2(ovcctx, &pkt, oframe, &got_packet);
-            if( 0 > ret ) {
-                LOGE("Couldn't encoding video frame: %s", av_err2str(ret));
-                av_free_packet(&pkt);
-                exit(1);
-            }
-            if(got_packet) {
-                av_copy_packet_side_data(&pkt, &packet);
-                ret = write_frame(ofctx, &ovcctx->time_base, ovstream, &pkt);
-            }
-            else {
-                ret = 0;
-            }
-            av_free_packet(&pkt);
-        }
-        else {
-            LOGI("Audio flushing decoded");
-            AVPacket apkt = packet;
-            apkt.stream_index = oastream_index;
-            ret = av_write_frame(ofctx, &apkt);
-            if( 0 > ret ) {
-                LOGE("Couldn't write audio frame : %s", av_err2str(ret));
-            }
-            if( 0 > ret ) {
-              LOGE("Couldn't write audio frame : %s", av_err2str(ret));
-            }
-        }
-    }
-
-    av_frame_unref(frame);
+    av_free_packet(&packet);
 
     ret = av_write_trailer(ofctx);
     if( 0 > ret ) {
@@ -459,20 +413,8 @@ int transcoding(const char * input, const char * output) {
 
 end:
 
-//    LOGI("Play the output video file with the command:\n"
-//                   "ffplay -f rawvideo -pix_fmt %s -video_size %dx%d %s\n",
-//                   av_get_pix_fmt_name(dst_pix_fmt), dstw, dsth,
-//                   "video.tmp");
-
     LOGI("Finished");
-
-//    if(videof) {
-//        fclose(videof);
-//    }
-//
-//    if(audiof) {
-//        fclose(audiof);
-//    }
+    finish();
 
     av_frame_free(&frame);
     av_frame_free(&oframe);
@@ -483,7 +425,6 @@ end:
     avformat_close_input(&ifctx);
     avio_close(ofctx->pb);
 
-
     avformat_free_context(ofctx);
 //    av_free(video_dst_data[0]);
     sws_freeContext(swsctx);
@@ -492,5 +433,5 @@ end:
         error_str = av_err2str(ret);
         LOGE("Error (%s)", av_err2str(ret));
     }
-//    log_finish(ret, error_str);
+//    finish();
 }

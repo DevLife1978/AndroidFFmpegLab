@@ -148,8 +148,8 @@ public class VideoActivity extends BaseActivity {
                             }
 
                             @Override
-                            public void onFinished(int ret, String error) {
-                                Log.i("Transcoding", "Finished : " + error);
+                            public void onFinished() {
+                                Log.i("Transcoding", "Finished");
                                 progressDialog.dismiss();
                             }
 

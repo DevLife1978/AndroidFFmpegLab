@@ -25,13 +25,18 @@ public class ffmpeglib {
 
     public void fireCallback(int frame, int total_frame) {
         if(null != mCallback) {
-            mCallback.onDecodedTime(frame, total_frame);
+            if(frame == total_frame) {
+                fireFinish();
+            }
+            else {
+                mCallback.onDecodedTime(frame, total_frame);
+            }
         }
     }
 
-    public void fireFinish(int ret, String error) {
+    public void fireFinish() {
         if(null != mCallback) {
-            mCallback.onFinished(ret, error);
+            mCallback.onFinished();
         }
     }
 
@@ -57,6 +62,6 @@ public class ffmpeglib {
     public native void stop();
     public interface FFmpegLibraryCallback {
         public void onDecodedTime(int frame, int total_frame);
-        public void onFinished(int ret, String error);
+        public void onFinished();
     }
 }

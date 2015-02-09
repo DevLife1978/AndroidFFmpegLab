@@ -49,6 +49,7 @@ static jobject global_obj;
 static jclass cls;
 
 void log_frame(int frame, int total_frame) {
+
     jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireCallback", "(II)V");
     if( 0 == func ) {
         LOGE("Couldn't find method");
@@ -60,14 +61,14 @@ void log_frame(int frame, int total_frame) {
 //    (*global_env)->DeleteLocalRef(global_env, cls);
 }
 
-void log_finish(int err, const char *err_str) {
-    jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireFinish", "(ILjava/lang/String;)V");
+void log_finish() {
+    jclass cls = (*global_env)->GetObjectClass(global_env, global_obj);
+    jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireFinish", "()V");
     if( 0 == func ) {
         LOGE("Couldn't find method");
     }
     else {
-        jstring errString = (*global_env)->NewStringUTF(global_env, err_str);
-        (*global_env)->CallVoidMethod(global_env, global_obj, func, err, errString);
+        (*global_env)->CallVoidMethod(global_env, global_obj, func);
     }
 //    (*global_env)->DeleteLocalRef(global_env, func);
 //    (*global_env)->DeleteLocalRef(global_env, cls);
@@ -565,6 +566,7 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
 //    av_log_set_callback(log_callback);
 
 //    show_codecs();
+    set_finish(log_finish);
     transcoding(input_path, output_path);
 
 //    (*global_env)->DeleteLocalRef(global_env, cls);
