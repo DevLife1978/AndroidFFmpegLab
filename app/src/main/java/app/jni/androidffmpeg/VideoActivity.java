@@ -142,7 +142,7 @@ public class VideoActivity extends BaseActivity {
                         ffmpeglib.setCallback(new ffmpeglib.FFmpegLibraryCallback() {
                             @Override
                             public void onDecodedTime(int frame, int total_frame) {
-                                Log.i("Transcoding", frame + " / " + total_frame);
+//                                Log.i("Transcoding", frame + " / " + total_frame);
                                 progressDialog.setMax(total_frame);
                                 progressDialog.setProgress(frame);
                             }

@@ -46,10 +46,9 @@ static void av_dump_codec(AVCodecContext *ctx) {
 
 static JNIEnv *global_env;
 static jobject global_obj;
+static jclass cls;
 
 void log_frame(int frame, int total_frame) {
-    jclass cls = (*global_env)->GetObjectClass(global_env, global_obj);
-
     jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireCallback", "(II)V");
     if( 0 == func ) {
         LOGE("Couldn't find method");
@@ -57,11 +56,11 @@ void log_frame(int frame, int total_frame) {
     else {
         (*global_env)->CallVoidMethod(global_env, global_obj, func, frame, total_frame);
     }
+//    (*global_env)->DeleteLocalRef(global_env,ad func);
+//    (*global_env)->DeleteLocalRef(global_env, cls);
 }
 
 void log_finish(int err, const char *err_str) {
-    jclass cls = (*global_env)->GetObjectClass(global_env, global_obj);
-
     jmethodID func = (*global_env)->GetMethodID(global_env, cls, "fireFinish", "(ILjava/lang/String;)V");
     if( 0 == func ) {
         LOGE("Couldn't find method");
@@ -70,6 +69,8 @@ void log_finish(int err, const char *err_str) {
         jstring errString = (*global_env)->NewStringUTF(global_env, err_str);
         (*global_env)->CallVoidMethod(global_env, global_obj, func, err, errString);
     }
+//    (*global_env)->DeleteLocalRef(global_env, func);
+//    (*global_env)->DeleteLocalRef(global_env, cls);
 }
 
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_dump(JNIEnv *env, jobject obj, jstring string)
@@ -519,10 +520,44 @@ static void dump_output_format(AVOutputFormat *format, int audio_codec_id, int v
     avcodec_close(video_context);
 }
 
+void dump(const char *path) {
+    int ret = 0;
+
+    LOGI("path -> %s", path);
+    av_register_all();
+    avcodec_register_all();
+
+    AVFormatContext *ifctx = NULL;
+    ret = avformat_open_input(&ifctx, path, NULL, NULL);
+    if( 0 > ret ) {
+        LOGE("ERROR1");
+        exit(1);
+    }
+    ret = avformat_find_stream_info(ifctx, NULL);
+    if( 0 > ret ) {
+        LOGE("ERROR3");
+        exit(1);
+    }
+    ret = av_find_best_stream(ifctx, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if( 0 > ret ) {
+        LOGE("ERROR5");
+        exit(1);
+    }
+    AVStream *ivstream = ifctx->streams[ret];
+    AVCodecContext *icctx = ivstream->codec;
+
+
+    LOGI("time base %d/%d", icctx->time_base.num, icctx->time_base.den);
+    LOGI("FPS %f", av_q2d(ivstream->avg_frame_rate));
+
+    avformat_close_input(&ifctx);
+}
+
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv *env, jobject obj, jstring input, jstring output) {
 
     global_env = env;
     global_obj = obj;
+    cls = (*global_env)->GetObjectClass(global_env, global_obj);
 
     const char *input_path = (*env)->GetStringUTFChars(env, input, 0);
     const char *output_path = (*env)->GetStringUTFChars(env, output, 0);
@@ -532,6 +567,7 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
 //    show_codecs();
     transcoding(input_path, output_path);
 
+//    (*global_env)->DeleteLocalRef(global_env, cls);
 //    muxing("/sdcard/Movies/output.mp4");
 //    AVOutputFormat *ofmt = av_guess_format(NULL, output_path, NULL);
 //    if(!ofmt) {
@@ -540,6 +576,11 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
 //    else {
 //        dump_output_format(ofmt, 0, 0);
 //    }
+
+
+//    dump(input_path);
+//    LOGI("<NEXT>");
+//    dump(output_path);
 }
 
 JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_stop(JNIEnv *env, jobject obj)

@@ -26,7 +26,7 @@ static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt)
 static int write_frame(AVFormatContext *fmt_ctx, const AVRational *time_base, AVStream *st, AVPacket *pkt)
 {
     /* rescale output packet timestamp values from codec to stream timebase */
-    av_packet_rescale_ts(pkt, *time_base, st->time_base);
+//    av_packet_rescale_ts(pkt, *time_base, st->time_base);
     pkt->stream_index = st->index;
 
     /* Write the compressed frame to the media file. */
@@ -89,6 +89,23 @@ int transcoding(const char * input, const char * output) {
     ret = avcodec_open2(iacctx, iadecoder, NULL);
     checkend(ret, "Couldn't open %s audio decoder", iadecoder->name);
 
+    int fps = ivstream->avg_frame_rate.den && ivstream->avg_frame_rate.num;
+    int tbr = ivstream->r_frame_rate.den && ivstream->r_frame_rate.num;
+    int tbn = ivstream->time_base.den && ivstream->time_base.num;
+    int tbc = ivstream->codec->time_base.den && ivstream->codec->time_base.num;
+
+    if (fps)
+        LOGI("%f %s", av_q2d(ivstream->avg_frame_rate), tbr || tbn || tbc ? "fps, " : "fps");
+    if (tbr)
+        LOGI("%f %s", av_q2d(ivstream->r_frame_rate), tbn || tbc ? "tbr, " : "tbr");
+    if (tbn)
+        LOGI("%f %s", 1 / av_q2d(ivstream->time_base), tbc ? "tbn, " : "tbn");
+    if (tbc)
+        LOGI("%f %s", 1 / av_q2d(ivstream->codec->time_base), "tbc");
+
+//    LOGI("Input bit rate tolerance %d", ivcctx->bit_rate_tolerance);
+//    LOGI("2 %d", avio_rb32(ifctx->pb));
+
     AVFrame *frame = av_frame_alloc();
     AVPacket packet;
     av_init_packet(&packet);
@@ -102,6 +119,7 @@ int transcoding(const char * input, const char * output) {
     }
 
     AVOutputFormat *ofmt = ofctx->oformat;
+//    ofmt->video_codec = AV_CODEC_ID_MPEG4;
     AVCodec *venc = avcodec_find_encoder(ofmt->video_codec);
     AVCodec *aenc = avcodec_find_encoder(ofmt->audio_codec);
 
@@ -182,23 +200,35 @@ int transcoding(const char * input, const char * output) {
             goto end;
         }
 
-        ovcctx->bit_rate = bit_rate;
+//        ovcctx->bit_rate = bit_rate;
         ovcctx->width = dstw;
         ovcctx->height = dsth;
-        int fps = av_q2d(ivstream->avg_frame_rate);
-        if( 0 >= fps ) {
-            ovstream->time_base = (AVRational){1, 25};
-        }
-        else {
-            ovstream->time_base = (AVRational){1, fps};
-        }
-        ovcctx->time_base = ovstream->time_base;
+        ovcctx->bit_rate = dstw * dsth * 4;
+        ovcctx->time_base = ivcctx->time_base;
+        ovstream->time_base = ivstream->time_base;
+        ovstream->avg_frame_rate = ivstream->avg_frame_rate;
+        ovstream->r_frame_rate = ivstream->r_frame_rate;
+        LOGI("q min/max %d/%d %d",ivcctx->qmin, ivcctx->qmax, ivcctx->max_qdiff);
+        ovcctx->qmin = ivcctx->qmin;
+        ovcctx->qmax = ivcctx->qmax;
+        ovcctx->max_qdiff = ivcctx->max_qdiff;
+//        ovcctx->time_base = (AVRational){1, fps};
+//        av_opt_set(ovcctx->priv_data, "preset", "ultrafast", 0);
+//        av_opt_set(ovcctx->priv_data, "tune", "zerolatency", 0);
+//        ovcctx->time_base = ivcctx->time_base;
+//        ovcctx->time_base.den /= 2;
+//        ovstream->r_frame_rate.den /= 2;
+//        ovstream->avg_frame_rate.den /= 2;
         ovcctx->gop_size = ivcctx->gop_size;
         ovcctx->pix_fmt = ivcctx->pix_fmt;
-        ovcctx->max_b_frames = 0;
+//        ovcctx->max_b_frames = 0;
+        ovcctx->coder_type = FF_CODER_TYPE_VLC;
 
         ovcctx->profile = FF_PROFILE_H264_BASELINE;
 
+        if(ofctx->oformat->flags & AVFMT_GLOBALHEADER) {
+            ovcctx->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        }
         ret = avcodec_open2(ovcctx, venc, NULL);
         if( 0 > ret ) {
             LOGE("Couldn't open encoder -> %s", venc->name);
@@ -230,11 +260,10 @@ int transcoding(const char * input, const char * output) {
         oacctx->sample_fmt = iacctx->sample_fmt;
         oacctx->bit_rate = iacctx->bit_rate;
         oacctx->frame_size = iacctx->frame_size;
-    }
 
-    if(ofctx->oformat->flags & AVFMT_GLOBALHEADER) {
-        ovcctx->flags |= CODEC_FLAG_GLOBAL_HEADER;
-        oacctx->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        if(ofctx->oformat->flags & AVFMT_GLOBALHEADER) {
+                oacctx->flags |= CODEC_FLAG_GLOBAL_HEADER;
+        }
     }
 
     AVDictionary *opt = NULL;
@@ -286,7 +315,33 @@ int transcoding(const char * input, const char * output) {
                     int got_packet = 0;
                     AVPacket pkt = {0};
                     av_init_packet(&pkt);
-                    oframe->pts = frame->coded_picture_number;
+//                    av_packet_rescale_ts(&pkt, ivcctx->time_base, ovcctx->time_base);
+//                    oframe->pts = frame->coded_picture_number;
+                    pkt.pts = packet.pts;
+                    pkt.dts = packet.dts;
+                    int64_t pts = packet.pts;
+                    int64_t dts = packet.dts;
+                    int duration = packet.duration;
+                    int convergence_duration = packet.convergence_duration;
+                    if(pts != AV_NOPTS_VALUE) {
+                        pts = av_rescale_q(pts, ivcctx->time_base, ovcctx->time_base);
+                    }
+                    if(dts != AV_NOPTS_VALUE) {
+                        dts = av_rescale_q(dts, ivcctx->time_base, ovcctx->time_base);
+                    }
+                    if(duration > 0) {
+                        duration = av_rescale_q(duration, ivcctx->time_base, ovcctx->time_base);
+                    }
+                    if(convergence_duration > 0) {
+                        convergence_duration = av_rescale_q(convergence_duration, ivcctx->time_base, ovcctx->time_base);
+                    }
+                    pkt.pts = pts;
+                    pkt.dts = dts;
+                    pkt.duration = duration;
+                    pkt.convergence_duration = convergence_duration;
+                    oframe->pts = pts;
+//                    oframe->pts = packet.pts != AV_NOPTS_VALUE ? av_rescale_q(packet.pts, ivstream->time_base, ovstream->time_base) : oframe->pts + 1;
+
                     ret = avcodec_encode_video2(ovcctx, &pkt, oframe, &got_packet);
                     if( 0 > ret ) {
                         LOGE("Couldn't encoding video frame: %s", av_err2str(ret));
@@ -295,12 +350,12 @@ int transcoding(const char * input, const char * output) {
                     }
                     if(got_packet) {
                         av_copy_packet_side_data(&pkt, &packet);
-                        log_frame(frame->coded_picture_number, total_frame);
                         ret = write_frame(ofctx, &ovcctx->time_base, ovstream, &pkt);
                     }
                     else {
                         ret = 0;
                     }
+                    log_frame(frame->coded_picture_number, total_frame);
                     av_free_packet(&pkt);
                 }
 
@@ -341,7 +396,31 @@ int transcoding(const char * input, const char * output) {
             int got_packet = 0;
             AVPacket pkt = {0};
             av_init_packet(&pkt);
-            oframe->pts = frame->coded_picture_number;
+
+            pkt.pts = packet.pts;
+            pkt.dts = packet.dts;
+            int64_t pts = packet.pts;
+            int64_t dts = packet.dts;
+            int duration = packet.duration;
+            int convergence_duration = packet.convergence_duration;
+            if(pts != AV_NOPTS_VALUE) {
+                pts = av_rescale_q(pts, ivcctx->time_base, ovcctx->time_base);
+            }
+            if(dts != AV_NOPTS_VALUE) {
+                dts = av_rescale_q(dts, ivcctx->time_base, ovcctx->time_base);
+            }
+            if(duration > 0) {
+                duration = av_rescale_q(duration, ivcctx->time_base, ovcctx->time_base);
+            }
+            if(convergence_duration > 0) {
+                convergence_duration = av_rescale_q(convergence_duration, ivcctx->time_base, ovcctx->time_base);
+            }
+            pkt.pts = pts;
+            pkt.dts = dts;
+            pkt.duration = duration;
+            pkt.convergence_duration = convergence_duration;
+            oframe->pts = pts;
+
             ret = avcodec_encode_video2(ovcctx, &pkt, oframe, &got_packet);
             if( 0 > ret ) {
                 LOGE("Couldn't encoding video frame: %s", av_err2str(ret));
@@ -359,11 +438,6 @@ int transcoding(const char * input, const char * output) {
         }
         else {
             LOGI("Audio flushing decoded");
-//            av_packet_rescale_ts(&packet,
-//                                 ifctx->streams[audio_stream_index]->time_base,
-//                                 ofctx->streams[oastream_index]->time_base);
-
-//            ret = av_interleaved_write_frame(ofctx, &packet);
             AVPacket apkt = packet;
             apkt.stream_index = oastream_index;
             ret = av_write_frame(ofctx, &apkt);
@@ -374,7 +448,6 @@ int transcoding(const char * input, const char * output) {
               LOGE("Couldn't write audio frame : %s", av_err2str(ret));
             }
         }
-//        fwrite(video_dst_data[0], 1, video_dst_bufsize, videof);
     }
 
     av_frame_unref(frame);
@@ -419,5 +492,5 @@ end:
         error_str = av_err2str(ret);
         LOGE("Error (%s)", av_err2str(ret));
     }
-    log_finish(ret, error_str);
+//    log_finish(ret, error_str);
 }
