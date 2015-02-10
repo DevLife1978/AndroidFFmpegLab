@@ -58,7 +58,7 @@ public class ffmpeglib {
 //    private native void dump(String mediaPath);
     public native long media_length(String mediaPath);
     public native int media_total_frame(String mediaPath);
-    public native void ffmpeg_test(String input_path, String output_path);
+    public native void ffmpeg_transcoding(String input_path, String output_path);
     public native void stop();
     public interface FFmpegLibraryCallback {
         public void onDecodedTime(int frame, int total_frame);

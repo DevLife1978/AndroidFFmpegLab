@@ -36,7 +36,6 @@ static void av_dump_codec(AVCodecContext *ctx) {
     LOGI("Media type %d", ctx->codec_type);
     LOGI("Codec id %d", ctx->codec_id);
     LOGI("Codec tag %s", (char *)&(ctx->codec_tag));
-    LOGI("Codec stream tag %s", (char *)&(ctx->stream_codec_tag));
     LOGI("bitrate %d", ctx->bit_rate);
     LOGI("bitrate tolerance %d", ctx->bit_rate_tolerance);
     LOGI("global quality %d", ctx->global_quality);
@@ -554,7 +553,7 @@ void dump(const char *path) {
     avformat_close_input(&ifctx);
 }
 
-JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv *env, jobject obj, jstring input, jstring output) {
+JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1transcoding(JNIEnv *env, jobject obj, jstring input, jstring output) {
 
     global_env = env;
     global_obj = obj;
@@ -563,7 +562,7 @@ JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test(JNIEnv 
     const char *input_path = (*env)->GetStringUTFChars(env, input, 0);
     const char *output_path = (*env)->GetStringUTFChars(env, output, 0);
 
-//    av_log_set_callback(log_callback);
+    av_log_set_callback(log_callback);
 
 //    show_codecs();
     set_finish(log_finish);

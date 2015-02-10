@@ -33,10 +33,10 @@ JNIEXPORT jint JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_media_1total_1frame
 
 /*
  * Class:     app_jni_ffmpegandroid_ffmpeglib
- * Method:    ffmpeg_test
+ * Method:    ffmpeg_transcoding
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1test
+JNIEXPORT void JNICALL Java_app_jni_ffmpegandroid_ffmpeglib_ffmpeg_1transcoding
   (JNIEnv *, jobject, jstring, jstring);
 
 /*

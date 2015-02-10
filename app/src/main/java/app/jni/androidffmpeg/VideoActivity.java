@@ -155,7 +155,7 @@ public class VideoActivity extends BaseActivity {
 
 
                         });
-                        ffmpeglib.ffmpeg_test(vh.getVideoPath(), filename);
+                        ffmpeglib.ffmpeg_transcoding(vh.getVideoPath(), filename);
                         long duration = ffmpeglib.media_length(vh.getVideoPath()) + 5000;
                         int hours, mins, secs, us;
                         secs  = (int)(duration / 1000000);
